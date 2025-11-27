@@ -47,6 +47,7 @@ export type Message =
   | { type: 'SYNC_TABS'; payload: TabUIState[] }
   | { type: 'TAB_SWITCH'; tabId: number }
   | { type: 'TAB_CLOSE'; tabId: number }
+  | { type: 'TAB_CLOSE_OTHERS'; tabId: number }
   | { type: 'TAB_NEW' }
   | { type: 'TAB_DUPLICATE'; tabId: number }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<UserSettings> };

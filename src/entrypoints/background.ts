@@ -88,6 +88,27 @@ export default defineBackground(() => {
         }
         break;
 
+      case 'TAB_CLOSE_OTHERS':
+        if (message.tabId) {
+          (async () => {
+            try {
+              // Get all tabs in current window except the target
+              const allTabs = await browser.tabs.query({ currentWindow: true });
+              const tabIdsToClose = allTabs
+                .filter(tab => tab.id !== message.tabId)
+                .map(tab => tab.id)
+                .filter((id): id is number => id !== undefined);
+              
+              if (tabIdsToClose.length > 0) {
+                await browser.tabs.remove(tabIdsToClose);
+              }
+            } catch (error) {
+              console.error('[Background] Error closing other tabs:', error);
+            }
+          })();
+        }
+        break;
+
       case 'UPDATE_SETTINGS':
         // Store settings in chrome.storage.local
         browser.storage.local.set({ settings: message.payload });

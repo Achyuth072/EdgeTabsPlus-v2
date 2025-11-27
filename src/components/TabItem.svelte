@@ -1,8 +1,14 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import type { TabUIState } from '../types';
 
   export let tab: TabUIState;
   export let isActive: boolean = false;
+
+  const dispatch = createEventDispatcher();
+
+  let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+  const LONG_PRESS_DURATION = 500; // ms
 
   function handleClick() {
     browser.runtime.sendMessage({
@@ -19,6 +25,33 @@
     });
   }
 
+  function handleTouchStart(event: TouchEvent) {
+    const touch = event.touches[0];
+    longPressTimer = setTimeout(() => {
+      // Trigger context menu
+      dispatch('contextmenu', {
+        tabId: tab.id,
+        x: touch.clientX,
+        y: touch.clientY,
+      });
+    }, LONG_PRESS_DURATION);
+  }
+
+  function handleTouchEnd() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  function handleTouchMove() {
+    // Cancel long press if finger moves
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
   // Truncate long titles
   function truncateTitle(title: string | undefined, maxLength: number = 20): string {
     if (!title) return 'New Tab';
@@ -31,6 +64,9 @@
   class:active={isActive}
   class:loading={tab.isLoading}
   onclick={handleClick}
+  ontouchstart={handleTouchStart}
+  ontouchend={handleTouchEnd}
+  ontouchmove={handleTouchMove}
   role="button"
   tabindex="0"
   title={tab.title || 'New Tab'}

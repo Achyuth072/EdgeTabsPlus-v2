@@ -1,17 +1,66 @@
 <script lang="ts">
   import { tabsStore } from '../stores/tabsStore';
   import TabItem from './TabItem.svelte';
+  import ContextMenu from './ContextMenu.svelte';
+  import { onMount } from 'svelte';
+
+  let menuVisible = false;
+  let menuX = 0;
+  let menuY = 0;
+  let menuTabId: number | null = null;
 
   function handleNewTab() {
     browser.runtime.sendMessage({ type: 'TAB_NEW' });
   }
+
+  function handleContextMenu(event: CustomEvent) {
+    const { tabId, x, y } = event.detail;
+    menuTabId = tabId;
+    menuX = x;
+    menuY = y;
+    menuVisible = true;
+  }
+
+  function handleMenuAction(event: CustomEvent) {
+    const { action } = event.detail;
+
+    if (!menuTabId) {
+      menuVisible = false;
+      return;
+    }
+
+    switch (action) {
+      case 'duplicate':
+        browser.runtime.sendMessage({ type: 'TAB_DUPLICATE', tabId: menuTabId });
+        break;
+      case 'close':
+        browser.runtime.sendMessage({ type: 'TAB_CLOSE', tabId: menuTabId });
+        break;
+      case 'close-others':
+        browser.runtime.sendMessage({ type: 'TAB_CLOSE_OTHERS', tabId: menuTabId });
+        break;
+    }
+
+    menuVisible = false;
+  }
+
+  function handleMenuClose() {
+    menuVisible = false;
+  }
+
+  onMount(() => {
+    const unsubscribe = tabsStore.subscribe(() => {
+      menuVisible = false;
+    });
+    return () => unsubscribe();
+  });
 </script>
 
 <div class="tab-bar-container">
   <div class="tab-bar">
     <div class="tabs-list">
       {#each $tabsStore as tab (tab.id)}
-        <TabItem {tab} isActive={tab.isActive} />
+        <TabItem {tab} isActive={tab.isActive} on:contextmenu={handleContextMenu} />
       {/each}
     </div>
     
@@ -21,13 +70,19 @@
   </div>
 </div>
 
+{#if menuVisible && menuTabId !== null}
+  <ContextMenu
+    visible={menuVisible}
+    tabId={menuTabId}
+    x={menuX}
+    y={menuY}
+    on:action={handleMenuAction}
+    on:close={handleMenuClose}
+  />
+{/if}
+
 <style>
   .tab-bar-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 2147483647;
     pointer-events: none;
   }
 
