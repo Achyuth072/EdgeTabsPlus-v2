@@ -9,7 +9,7 @@ export default defineConfig({
     host_permissions: ['<all_urls>'],
     // Intentionally exclude contextMenus, tabGroups, windows for Android
   },
-  runner: {
+ webExt: {
     disabled: true, // Disable auto-launch, we'll manually load extension
   },
 });

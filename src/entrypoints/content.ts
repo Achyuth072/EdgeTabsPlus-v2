@@ -33,12 +33,16 @@ export default defineContentScript({
     ui.mount();
 
     // Listen for messages from background
+    // Listen for messages from background
     browser.runtime.onMessage.addListener((message: Message) => {
       if (message.type === 'SYNC_TABS') {
         console.log('[EdgeTabsPlus] Received tabs update:', message.payload);
         updateTabs(message.payload);
       }
     });
+
+    // Request initial state
+    browser.runtime.sendMessage({ type: 'GET_TABS' });
 
     console.log('[EdgeTabsPlus] Setup complete');
   },

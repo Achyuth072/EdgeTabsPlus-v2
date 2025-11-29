@@ -113,6 +113,11 @@ export default defineBackground(() => {
         // Store settings in chrome.storage.local
         browser.storage.local.set({ settings: message.payload });
         break;
+
+      case 'GET_TABS':
+        // Immediately send back current tabs to the requester
+        broadcastTabs();
+        break;
     }
   });
 

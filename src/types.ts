@@ -50,4 +50,5 @@ export type Message =
   | { type: 'TAB_CLOSE_OTHERS'; tabId: number }
   | { type: 'TAB_NEW' }
   | { type: 'TAB_DUPLICATE'; tabId: number }
-  | { type: 'UPDATE_SETTINGS'; payload: Partial<UserSettings> };
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<UserSettings> }
+  | { type: 'GET_TABS' };

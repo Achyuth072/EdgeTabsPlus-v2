@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { tabsStore } from '../stores/tabsStore';
-  import TabItem from './TabItem.svelte';
-  import ContextMenu from './ContextMenu.svelte';
-  import { onMount } from 'svelte';
+  import { tabsStore } from "../stores/tabsStore";
+  import TabItem from "./TabItem.svelte";
+  import ContextMenu from "./ContextMenu.svelte";
+  import { onMount } from "svelte";
 
   let menuVisible = false;
   let menuX = 0;
@@ -10,7 +10,7 @@
   let menuTabId: number | null = null;
 
   function handleNewTab() {
-    browser.runtime.sendMessage({ type: 'TAB_NEW' });
+    browser.runtime.sendMessage({ type: "TAB_NEW" });
   }
 
   function handleContextMenu(event: CustomEvent) {
@@ -30,14 +30,20 @@
     }
 
     switch (action) {
-      case 'duplicate':
-        browser.runtime.sendMessage({ type: 'TAB_DUPLICATE', tabId: menuTabId });
+      case "duplicate":
+        browser.runtime.sendMessage({
+          type: "TAB_DUPLICATE",
+          tabId: menuTabId,
+        });
         break;
-      case 'close':
-        browser.runtime.sendMessage({ type: 'TAB_CLOSE', tabId: menuTabId });
+      case "close":
+        browser.runtime.sendMessage({ type: "TAB_CLOSE", tabId: menuTabId });
         break;
-      case 'close-others':
-        browser.runtime.sendMessage({ type: 'TAB_CLOSE_OTHERS', tabId: menuTabId });
+      case "close-others":
+        browser.runtime.sendMessage({
+          type: "TAB_CLOSE_OTHERS",
+          tabId: menuTabId,
+        });
         break;
     }
 
@@ -60,12 +66,28 @@
   <div class="tab-bar">
     <div class="tabs-list">
       {#each $tabsStore as tab (tab.id)}
-        <TabItem {tab} isActive={tab.isActive} on:contextmenu={handleContextMenu} />
+        <TabItem
+          {tab}
+          isActive={tab.isActive}
+          on:contextmenu={handleContextMenu}
+        />
       {/each}
     </div>
-    
+
     <button class="new-tab-button" onclick={handleNewTab} title="New tab">
-      +
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
     </button>
   </div>
 </div>
@@ -134,12 +156,16 @@
     border: 1px solid rgba(0, 120, 212, 0.5);
     border-radius: 6px;
     cursor: pointer;
-    color: white;
+    color: white !important;
     font-size: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 10;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
   .new-tab-button:hover {
