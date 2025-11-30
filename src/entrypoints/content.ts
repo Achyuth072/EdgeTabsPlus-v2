@@ -1,6 +1,7 @@
 import './content/style.css';
 import type { Message } from '../types';
 import { updateTabs } from '../stores/tabsStore';
+import { loadSettings, settingsStore } from '../stores/settingsStore';
 import TabBarApp from './content/TabBarApp.svelte';
 import { mount, unmount } from 'svelte';
 
@@ -10,6 +11,9 @@ export default defineContentScript({
   
   async main(ctx) {
     console.log('[EdgeTabsPlus] Content script loaded');
+
+    // Load settings
+    await loadSettings();
 
     // Create Shadow DOM UI
     const ui = await createShadowRootUi(ctx, {
@@ -33,11 +37,13 @@ export default defineContentScript({
     ui.mount();
 
     // Listen for messages from background
-    // Listen for messages from background
     browser.runtime.onMessage.addListener((message: Message) => {
       if (message.type === 'SYNC_TABS') {
         console.log('[EdgeTabsPlus] Received tabs update:', message.payload);
         updateTabs(message.payload);
+      } else if (message.type === 'UPDATE_SETTINGS') {
+        console.log('[EdgeTabsPlus] Updating settings:', message.payload);
+        settingsStore.update(current => ({ ...current, ...message.payload }));
       }
     });
 

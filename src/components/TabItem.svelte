@@ -4,6 +4,7 @@
 
   export let tab: TabUIState;
   export let isActive: boolean = false;
+  export let theme: "light" | "dark" = "dark";
 
   const dispatch = createEventDispatcher();
 
@@ -72,7 +73,7 @@
 </script>
 
 <div
-  class="tab-item"
+  class="tab-item {theme}"
   class:active={isActive}
   class:loading={tab.isLoading}
   onclick={handleClick}
@@ -218,32 +219,31 @@
     background: rgba(255, 255, 255, 0.15);
     color: white !important;
   }
+
   /* Light theme adjustments */
-  @media (prefers-color-scheme: light) {
-    .tab-item {
-      background: rgba(0, 0, 0, 0.05);
-      border-color: rgba(0, 0, 0, 0.1);
-      color: rgba(0, 0, 0, 0.8);
-    }
+  .tab-item.light {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.8);
+  }
 
-    .tab-item:hover {
-      background: rgba(0, 0, 0, 0.1);
-      border-color: rgba(0, 0, 0, 0.2);
-    }
+  .tab-item.light:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
 
-    .tab-item.active {
-      background: rgba(0, 120, 212, 0.2);
-      border-color: rgba(0, 120, 212, 0.4);
-      color: black;
-    }
+  .tab-item.light.active {
+    background: rgba(0, 120, 212, 0.2);
+    border-color: rgba(0, 120, 212, 0.4);
+    color: black;
+  }
 
-    .close-button {
-      color: rgba(0, 0, 0, 0.6);
-    }
+  .tab-item.light .close-button {
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
 
-    .close-button:hover {
-      background: rgba(0, 0, 0, 0.1);
-      color: black;
-    }
+  .tab-item.light .close-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: black !important;
   }
 </style>

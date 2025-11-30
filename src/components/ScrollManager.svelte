@@ -1,13 +1,30 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
+  import { settingsStore } from "../stores/settingsStore";
 
   let isVisible = true;
   let lastScrollY = 0;
   let ticking = false;
+  let scrollBehavior: "always-show" | "hide-on-scroll" = "hide-on-scroll";
 
   const SCROLL_THRESHOLD = 10; // pixels before triggering hide/show
 
+  // Subscribe to settings
+  const unsubscribe = settingsStore.subscribe((settings) => {
+    scrollBehavior = settings.scrollBehavior;
+    // If set to always show, make sure it's visible
+    if (scrollBehavior === "always-show") {
+      isVisible = true;
+    }
+  });
+
   function handleScroll() {
+    // Don't hide if set to always show
+    if (scrollBehavior === "always-show") {
+      isVisible = true;
+      return;
+    }
+
     const currentScrollY = window.scrollY;
 
     // Only process if we've scrolled more than threshold
@@ -44,10 +61,11 @@
 
   onMount(() => {
     // Use passive listener for better performance
-    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener("scroll", onScroll);
+      unsubscribe();
     };
   });
 </script>
