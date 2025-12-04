@@ -5,7 +5,7 @@
 <main>
   <div class="header">
     <div class="logo-container">
-      <img src="/icon/48.png" alt="EdgeTabsPlus" class="logo" />
+      <img src="/icon/icon48.png" alt="EdgeTabsPlus" class="logo" />
       <div class="title-container">
         <h1>EdgeTabsPlus</h1>
         <span class="version">v2.0</span>

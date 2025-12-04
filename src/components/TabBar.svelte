@@ -3,18 +3,41 @@
   import { settingsStore } from "../stores/settingsStore";
   import TabItem from "./TabItem.svelte";
   import ContextMenu from "./ContextMenu.svelte";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   let menuVisible = false;
   let menuX = 0;
   let menuY = 0;
   let menuTabId: number | null = null;
+  let tabsListElement: HTMLElement;
 
   let systemTheme: "light" | "dark" = "dark";
   let effectiveTheme: "light" | "dark" = "dark";
 
   $: effectiveTheme =
     $settingsStore.theme === "system" ? systemTheme : $settingsStore.theme;
+
+  // Auto-scroll to active tab
+  $: {
+    const activeTab = $tabsStore.find((t) => t.isActive);
+    if (activeTab && activeTab.id !== undefined && tabsListElement) {
+      scrollToActiveTab(activeTab.id);
+    }
+  }
+
+  async function scrollToActiveTab(tabId: number) {
+    await tick(); // Wait for DOM update
+    const tabElement = tabsListElement.querySelector(
+      `[data-tab-id="${tabId}"]`
+    );
+    if (tabElement) {
+      tabElement.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }
 
   function handleNewTab() {
     browser.runtime.sendMessage({ type: "TAB_NEW" });
@@ -84,7 +107,7 @@
 
 <div class="tab-bar-container">
   <div class="tab-bar {effectiveTheme}">
-    <div class="tabs-list">
+    <div class="tabs-list" bind:this={tabsListElement}>
       {#each $tabsStore as tab (tab.id)}
         <TabItem
           {tab}

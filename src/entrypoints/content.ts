@@ -1,9 +1,9 @@
 import './content/style.css';
-import type { Message } from '../types';
-import { updateTabs } from '../stores/tabsStore';
-import { loadSettings, settingsStore } from '../stores/settingsStore';
-import TabBarApp from './content/TabBarApp.svelte';
 import { mount, unmount } from 'svelte';
+import TabBarApp from './content/TabBarApp.svelte';
+import { loadSettings, settingsStore } from '../stores/settingsStore';
+import { updateTabs, tabsStore } from '../stores/tabsStore';
+import type { Message, TabUIState } from '../types';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -36,7 +36,36 @@ export default defineContentScript({
     // Mount the UI
     ui.mount();
 
-    // Listen for messages from background
+    // Request initial tabs
+    try {
+      console.log('[EdgeTabsPlus] Starting tab load sequence...');
+      
+      // 1. Try loading from cache first (Instant render for TC-01)
+      console.log('[EdgeTabsPlus] Reading from storage.local...');
+      const { cachedTabs } = await browser.storage.local.get("cachedTabs");
+      console.log('[EdgeTabsPlus] Storage read complete. Result:', cachedTabs);
+      
+      if (cachedTabs) {
+        console.log("[EdgeTabsPlus] ✅ Found cached tabs:", cachedTabs.length, 'tabs');
+        console.log("[EdgeTabsPlus] Cached tab IDs:", cachedTabs.map((t: any) => t.id));
+        updateTabs(cachedTabs as TabUIState[]);
+      } else {
+        console.log('[EdgeTabsPlus] ❌ No cached tabs found in storage');
+      }
+
+      // 2. Then fetch live data (Reconciliation)
+      console.log('[EdgeTabsPlus] Sending GET_TABS to background...');
+      const tabs = await browser.runtime.sendMessage({ type: "GET_TABS" }) as TabUIState[];
+      console.log('[EdgeTabsPlus] Received response from background:', tabs?.length, 'tabs');
+      if (tabs) {
+        console.log('[EdgeTabsPlus] Live tab IDs:', tabs.map(t => t.id));
+        updateTabs(tabs);
+      }
+    } catch (e) {
+      console.error("Failed to load initial tabs:", e);
+    }
+
+    // Listen for tab updates from background
     browser.runtime.onMessage.addListener((message: Message) => {
       if (message.type === 'SYNC_TABS') {
         console.log('[EdgeTabsPlus] Received tabs update:', message.payload);
@@ -46,9 +75,6 @@ export default defineContentScript({
         settingsStore.update(current => ({ ...current, ...message.payload }));
       }
     });
-
-    // Request initial state
-    browser.runtime.sendMessage({ type: 'GET_TABS' });
 
     console.log('[EdgeTabsPlus] Setup complete');
   },

@@ -1,126 +1,255 @@
-import type { TabUIState, Message } from '../types';
+import type { TabUIState, Message } from "../types";
 
 export default defineBackground(() => {
-  console.log('EdgeTabsPlus Background Worker Started', { id: browser.runtime.id });
+  console.log("EdgeTabsPlus Background Worker Started", {
+    id: browser.runtime.id,
+  });
 
-  // Debounce helper to prevent excessive broadcasts
+  // --- Incremental State Manager ---
+  let tabState: TabUIState[] = [];
+  let isInitialized = false;
+
+  // Debounce helper
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  const DEBOUNCE_DELAY = 100; // ms
+  const DEBOUNCE_DELAY = 100;
 
   /**
-   * Broadcasts the current tab state to all content scripts
-   * Strictly queries currentWindow:true for Android compatibility
+   * Loads initial state from storage and merges with current active tab
    */
-  const broadcastTabs = async () => {
-    try {
-      // 1. Get tabs ONLY for the current window (Android constraint)
-      const tabs = await browser.tabs.query({ currentWindow: true });
-      
-      // 2. Transform to TabUIState format
-      const payload: TabUIState[] = tabs.map(tab => ({
-        ...tab,
-        isActive: tab.active,
-        isLoading: tab.status === 'loading',
-        isPlayingAudio: tab.audible || false,
-      }));
+  const init = async () => {
+    if (isInitialized) return;
 
+    try {
+      // 1. Load persistent cache
+      const data = await browser.storage.local.get("cachedTabs");
+      const cachedTabs: TabUIState[] = data.cachedTabs || [];
+      console.log("[Background] Loaded cached tabs:", cachedTabs.length);
+
+      // 2. Get currently visible tabs (on Android, likely just the active one)
+      const visibleTabs = await browser.tabs.query({});
+      console.log("[Background] Visible tabs from query:", visibleTabs.length);
+
+      // 3. Merge visible tabs into cache
+      // Start with cache
+      tabState = [...cachedTabs];
+
+      // Update or add visible tabs with heuristic matching enabled
+      for (const tab of visibleTabs) {
+        updateTabInState(tab, true);
+      }
+
+      // 4. Mark active tab correctly
+      // The query result is the source of truth for "active"
+      const activeTab = visibleTabs.find((t) => t.active);
+      if (activeTab && activeTab.id) {
+        tabState = tabState.map((t) => ({
+          ...t,
+          isActive: t.id === activeTab.id,
+        }));
+      }
+
+      isInitialized = true;
+      saveAndBroadcast();
+    } catch (error) {
+      console.error("[Background] Init failed:", error);
+    }
+  };
+
+  /**
+   * Updates a single tab in the state, or adds it if missing
+   * @param allowHeuristicMatch If true, attempts to match by URL+Active status (for restarts)
+   */
+  const updateTabInState = (chromeTab: any, allowHeuristicMatch = false) => {
+    if (!chromeTab.id) return;
+
+    const uiTab: TabUIState = {
+      ...chromeTab,
+      isActive: chromeTab.active,
+      isLoading: chromeTab.status === "loading",
+      isPlayingAudio: chromeTab.audible || false,
+    };
+
+    let index = tabState.findIndex((t) => t.id === chromeTab.id);
+
+    // Smart Session Restore: Check for ID mismatch on restart
+    if (index === -1 && allowHeuristicMatch) {
+      // Look for the previously active tab with the same URL
+      const candidateIndex = tabState.findIndex(t => 
+        t.isActive && // Was active
+        t.url === chromeTab.url // Same URL
+      );
+      
+      if (candidateIndex > -1) {
+        console.log(`[Background] Reconciled tab ID: ${tabState[candidateIndex].id} -> ${chromeTab.id}`);
+        // Update the ID in the state to match the new reality
+        tabState[candidateIndex].id = chromeTab.id;
+        index = candidateIndex;
+      }
+    }
+
+    if (index > -1) {
+      // Merge new data into existing tab
+      tabState[index] = { ...tabState[index], ...uiTab };
+    } else {
+      // Add new tab
+      tabState.push(uiTab);
+    }
+  };
+
+  /**
+   * Removes a tab from state
+   */
+  const removeTabFromState = (tabId: number) => {
+    tabState = tabState.filter((t) => t.id !== tabId);
+  };
+
+  /**
+   * Persists state to storage and notifies content scripts
+   */
+  const saveAndBroadcast = async () => {
+    try {
+      // Save to storage
+      await browser.storage.local.set({ cachedTabs: tabState });
+      console.log("[Background] State saved. Total tabs:", tabState.length);
+
+      // Broadcast to content scripts
       const message: Message = {
-        type: 'SYNC_TABS',
-        payload,
+        type: "SYNC_TABS",
+        payload: tabState,
       };
 
-      // 3. Send to all tabs to keep UI in sync
       const allTabs = await browser.tabs.query({});
-      allTabs.forEach(tab => {
+      allTabs.forEach((tab) => {
         if (tab.id) {
           browser.tabs.sendMessage(tab.id, message).catch(() => {
-            // Silently ignore errors (tab might not have content script loaded)
+            // Ignore errors for tabs without content script
           });
         }
       });
-
-      console.log(`[Background] Broadcasted ${payload.length} tabs`);
     } catch (error) {
-      console.error('[Background] Error broadcasting tabs:', error);
+      console.error("[Background] Broadcast failed:", error);
     }
   };
 
-  /**
-   * Debounced version of broadcastTabs
-   */
-  const debouncedBroadcast = () => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    debounceTimer = setTimeout(broadcastTabs, DEBOUNCE_DELAY);
+  const debouncedUpdate = () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      // Refresh state from query before broadcasting
+      // This ensures we catch any updates we might have missed
+      const visibleTabs = await browser.tabs.query({});
+      visibleTabs.forEach(tab => updateTabInState(tab, false));
+      saveAndBroadcast();
+    }, DEBOUNCE_DELAY);
   };
 
-  // Listen to all tab events
-  browser.tabs.onCreated.addListener(debouncedBroadcast);
-  browser.tabs.onUpdated.addListener(debouncedBroadcast);
-  browser.tabs.onRemoved.addListener(debouncedBroadcast);
-  browser.tabs.onActivated.addListener(debouncedBroadcast);
+  // --- Event Listeners ---
 
-  // Handle messages from content scripts
-  browser.runtime.onMessage.addListener((message: Message, sender) => {
-    console.log('[Background] Received message:', message.type);
-
-    switch (message.type) {
-      case 'TAB_SWITCH':
-        if (message.tabId) {
-          browser.tabs.update(message.tabId, { active: true });
-        }
-        break;
-
-      case 'TAB_CLOSE':
-        if (message.tabId) {
-          browser.tabs.remove(message.tabId);
-        }
-        break;
-
-      case 'TAB_NEW':
-        browser.tabs.create({ url: 'edge://newtab' });
-        break;
-
-      case 'TAB_DUPLICATE':
-        if (message.tabId) {
-          browser.tabs.duplicate(message.tabId);
-        }
-        break;
-
-      case 'TAB_CLOSE_OTHERS':
-        if (message.tabId) {
-          (async () => {
-            try {
-              // Get all tabs in current window except the target
-              const allTabs = await browser.tabs.query({ currentWindow: true });
-              const tabIdsToClose = allTabs
-                .filter(tab => tab.id !== message.tabId)
-                .map(tab => tab.id)
-                .filter((id): id is number => id !== undefined);
-              
-              if (tabIdsToClose.length > 0) {
-                await browser.tabs.remove(tabIdsToClose);
-              }
-            } catch (error) {
-              console.error('[Background] Error closing other tabs:', error);
-            }
-          })();
-        }
-        break;
-
-      case 'UPDATE_SETTINGS':
-        // Store settings in chrome.storage.local
-        browser.storage.local.set({ settings: message.payload });
-        break;
-
-      case 'GET_TABS':
-        // Immediately send back current tabs to the requester
-        broadcastTabs();
-        break;
-    }
+  browser.tabs.onCreated.addListener((tab) => {
+    console.log("[Background] Tab created:", tab.id);
+    updateTabInState(tab);
+    saveAndBroadcast();
   });
 
-  // Initial broadcast
-  broadcastTabs();
+  browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // console.log("[Background] Tab updated:", tabId);
+    updateTabInState(tab);
+    debouncedUpdate();
+  });
+
+  browser.tabs.onRemoved.addListener((tabId) => {
+    console.log("[Background] Tab removed:", tabId);
+    removeTabFromState(tabId);
+    saveAndBroadcast();
+  });
+
+  browser.tabs.onActivated.addListener(async ({ tabId }) => {
+    console.log("[Background] Tab activated:", tabId);
+    // Update active status in state
+    tabState = tabState.map((t) => ({
+      ...t,
+      isActive: t.id === tabId,
+    }));
+    
+    // Fetch full tab details to ensure we have latest data
+    try {
+      const tab = await browser.tabs.get(tabId);
+      updateTabInState(tab);
+    } catch (e) {
+      console.error("[Background] Failed to get activated tab:", e);
+    }
+    
+    saveAndBroadcast();
+  });
+
+  // --- Message Handling ---
+
+  browser.runtime.onMessage.addListener(
+    (message: Message, sender, sendResponse) => {
+      // console.log("[Background] Received message:", message.type);
+
+      switch (message.type) {
+        case "TAB_SWITCH":
+          if (message.tabId) {
+            browser.tabs.update(message.tabId, { active: true }).catch((err) => {
+                console.error("[Background] Switch failed, removing ghost tab:", message.tabId);
+                // Ghost tab detection: if switch fails, tab is likely gone
+                removeTabFromState(message.tabId);
+                saveAndBroadcast();
+            });
+          }
+          break;
+
+        case "TAB_CLOSE":
+          if (message.tabId) {
+            browser.tabs.remove(message.tabId);
+            // Optimistic removal
+            removeTabFromState(message.tabId);
+            saveAndBroadcast();
+          }
+          break;
+
+        case "TAB_NEW":
+          browser.tabs.create({ url: "edge://newtab" });
+          break;
+
+        case "TAB_DUPLICATE":
+          if (message.tabId) {
+            browser.tabs.duplicate(message.tabId);
+          }
+          break;
+
+        case "TAB_CLOSE_OTHERS":
+          if (message.tabId) {
+            const tabsToClose = tabState
+                .filter(t => t.id !== message.tabId)
+                .map(t => t.id)
+                .filter((id): id is number => id !== undefined);
+            
+            if (tabsToClose.length > 0) {
+                browser.tabs.remove(tabsToClose);
+                // Optimistic update
+                tabState = tabState.filter(t => t.id === message.tabId);
+                saveAndBroadcast();
+            }
+          }
+          break;
+
+        case "UPDATE_SETTINGS":
+          browser.storage.local.set({ settings: message.payload });
+          break;
+
+        case "GET_TABS":
+          // Ensure we are initialized
+          if (!isInitialized) {
+             init().then(() => sendResponse(tabState));
+          } else {
+             sendResponse(tabState);
+          }
+          return true; // Async response
+      }
+    }
+  );
+
+  // Start initialization
+  init();
 });

@@ -76,6 +76,7 @@
   class="tab-item {theme}"
   class:active={isActive}
   class:loading={tab.isLoading}
+  data-tab-id={tab.id}
   onclick={handleClick}
   onkeydown={handleKeyDown}
   ontouchstart={handleTouchStart}
