@@ -148,6 +148,8 @@
     font-size: 14px;
     white-space: nowrap;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .tab-item:hover {
