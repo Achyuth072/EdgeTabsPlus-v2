@@ -48,6 +48,32 @@ export default defineBackground(() => {
         }));
       }
 
+      // 5. Prune stale cached tabs (Ghost Tab Prevention)
+      // Validate each cached tab ID against actual browser state
+      const validatedTabState: TabUIState[] = [];
+      for (const cachedTab of tabState) {
+        if (!cachedTab.id) {
+          validatedTabState.push(cachedTab);
+          continue;
+        }
+        
+        // Check if this tab ID exists in visible tabs
+        const existsInBrowser = visibleTabs.some((vt) => vt.id === cachedTab.id);
+        if (existsInBrowser) {
+          validatedTabState.push(cachedTab);
+        } else {
+          // Double-check via API call (handles edge cases like background tabs)
+          try {
+            await browser.tabs.get(cachedTab.id);
+            validatedTabState.push(cachedTab);
+            console.log(`[Background] Kept non-visible tab: ${cachedTab.id}`);
+          } catch {
+            console.log(`[Background] 🗑️ Pruned ghost tab: ${cachedTab.id} (${cachedTab.title})`);
+          }
+        }
+      }
+      tabState = validatedTabState;
+
       isInitialized = true;
       saveAndBroadcast();
     } catch (error) {
