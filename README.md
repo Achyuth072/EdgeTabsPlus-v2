@@ -133,7 +133,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ## Acknowledgments
 
-- Built with [WXT](https://wxt.dev) by Akash Hamirwasia
+- Built with [WXT](https://wxt.dev)
 - UI powered by [Svelte](https://svelte.dev)
 - Icons from [DuckDuckGo Icon Service](https://icons.duckduckgo.com)
 - Inspired by desktop browser tab interfaces
