@@ -1,12 +1,12 @@
-# EdgeTabsPlus v2.0
+# EdgeTabs+
 
 **Desktop-style horizontal tab bar for Microsoft Edge on Android**
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/github/package-json/v/Achyuth072/EdgeTabsPlus-v2?color=blue)
 ![Platform](https://img.shields.io/badge/platform-Edge%20Android-0078d4)
 ![Framework](https://img.shields.io/badge/framework-WXT%20%2B%20Svelte-ff3e00)
 
-EdgeTabsPlus brings the familiar desktop tab bar experience to Microsoft Edge on Android. Browse with ease using a persistent horizontal tab bar that lets you switch between tabs with a single tap, just like on desktop.
+EdgeTabs+ brings the familiar desktop tab bar experience to Microsoft Edge on Android. Browse with ease using a persistent horizontal tab bar that lets you switch between tabs with a single tap, just like on desktop.
 
 ---
 
@@ -57,9 +57,15 @@ The production build will be in `.output/chrome-mv3/`.
 
 ### Testing on Android
 
-Testing on Edge Android requires a specific workflow as direct CRX loading via USB is limited/not possible.
+Testing on Edge Android requires ADB (Android Debug Bridge) and USB debugging enabled on your device.
 
-1.  **Debugging Logs**: Connect your device via USB and use `edge://inspect` on your desktop Edge browser to view console logs and inspect the extension background/content scripts.
+#### Prerequisites
+1.  **Enable USB Debugging**: On your Android device, go to Settings → About Phone → tap Build Number 7 times to enable Developer Options. Then go to Developer Options and enable "USB Debugging".
+2.  **Install ADB**: Download and install [Android Platform Tools](https://developer.android.com/studio/releases/platform-tools) on your desktop.
+3.  **Connect Device**: Connect your Android device via USB cable and authorize the debugging connection when prompted.
+
+#### Testing Workflow
+1.  **Debugging Logs**: Use `edge://inspect` on your desktop Edge browser to view console logs and inspect the extension background/content scripts.
 2.  **Installation for Testing**:
     *   **Option A**: Use "Developer options" within Edge Android Canary to load the extension via `.crx`.
     *   **Option B**: Use an activity launcher app (e.g., "Activity Launcher" or "App Manager") to launch the hidden "Extension Install by Crx Activity" on Edge Android Stable. This allows you to install the `.crx` file directly.
@@ -74,7 +80,7 @@ Access settings by clicking the extension icon in the toolbar:
 |---------|---------|-------------|
 | **Theme** | System / Light / Dark | Choose your preferred color scheme |
 | **Scroll Behavior** | Hide on Scroll / Always Show | Control tab bar visibility |
-| **Tab Width** | Dynamic / Fixed | Tab size behavior |
+| **Tab Width (WIP)** | Dynamic / Fixed | Tab size behavior |
 
 All settings are synced across browser instances and persist after restart.
 
@@ -104,17 +110,6 @@ For a complete list of supported APIs, refer to the [Microsoft Edge Extension AP
 4.  **Debounced Tab Updates** — Reduces unnecessary re-renders
 5.  **DuckDuckGo Icon Service** — Fast, cached favicon loading
 
-### Browser Compatibility
-
-- **Microsoft Edge (Android)** — Stable version
-
----
-
-## Known Limitations
-
-1.  **No Tab Grouping** — The `tabGroups` API is unavailable on Android
-2.  **Single Window Only** — Cannot manage multiple browser windows
----
 
 ## Contributing
 
