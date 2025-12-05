@@ -1,14 +1,19 @@
 <script lang="ts">
+  import { browser } from "wxt/browser";
   import Settings from "../../components/Settings.svelte";
+
+  const manifest = browser.runtime.getManifest();
+  const extensionName = manifest.name;
+  const version = manifest.version;
 </script>
 
 <main>
   <div class="header">
     <div class="logo-container">
-      <img src="/icon/icon48.png" alt="EdgeTabsPlus" class="logo" />
+      <img src="/icon/icon128.png" alt={extensionName} class="logo" />
       <div class="title-container">
-        <h1>EdgeTabsPlus</h1>
-        <span class="version">v2.0</span>
+        <h1>{extensionName}</h1>
+        <span class="version">v{version}</span>
       </div>
     </div>
   </div>
@@ -22,10 +27,6 @@
 
 <style>
   main {
-    width: 100%;
-    min-width: 300px;
-    max-width: 400px;
-    min-height: auto;
     box-sizing: border-box;
     background: #fff;
     font-family:
@@ -51,7 +52,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
   }
 
   .logo {
