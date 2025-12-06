@@ -113,6 +113,23 @@
 
   // Check if in favicon-only mode
   $: isFaviconOnly = typeof width === "number" && width < 80;
+
+  // Get favicon URL - use Edge logo for edge:// URLs
+  function getFaviconUrl(url: string | undefined): string {
+    if (!url) return "";
+
+    try {
+      const urlObj = new URL(url);
+      // Use Edge logo for edge:// protocol pages
+      if (urlObj.protocol === "edge:" || urlObj.protocol === "chrome:") {
+        return "https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg";
+      }
+      // Use DuckDuckGo icon service for other URLs
+      return `https://icons.duckduckgo.com/ip3/${urlObj.hostname}.ico`;
+    } catch {
+      return "";
+    }
+  }
 </script>
 
 <div
@@ -138,7 +155,7 @@
   <div class="tab-favicon">
     {#if tab.url}
       <img
-        src={`https://icons.duckduckgo.com/ip3/${new URL(tab.url).hostname}.ico`}
+        src={getFaviconUrl(tab.url)}
         alt=""
         width="16"
         height="16"
