@@ -22,7 +22,7 @@ EdgeTabs+ brings the familiar desktop tab bar experience to Microsoft Edge on An
 - **60fps Performance** — Silky smooth animations with zero lag
 - **Privacy First** — All processing happens locally, no data collection
 
-### Advanced Features ✨
+### Advanced Features
 - **Flexible Positioning** — Choose top or bottom placement for the tab bar
 - **Adaptive Tab Width** — Three sizing modes:
   - **Dynamic**: Width adjusts based on tab count
@@ -164,7 +164,5 @@ Contributions are welcome! Please follow these guidelines:
 <div align="center">
 
 **Made for Edge Android users**
-
-[⭐ Star on GitHub](https://github.com/Achyuth072/EdgeTabsPlus-v2)
 
 </div>
