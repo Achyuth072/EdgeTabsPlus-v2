@@ -16,7 +16,7 @@ EdgeTabs+ brings the familiar desktop tab bar experience to Microsoft Edge on An
 - **Instant Tab Switching** — One-tap access to all your tabs
 - **Quick New Tab** — Add tabs without navigating menus
 - **Easy Tab Management** — Close tabs with a single tap
-- **Long-Press Context Menu** — Duplicate, close, or close other tabs
+- **Long-Press Context Menu** — Duplicate, close, close others, copy title/URL
 - **Auto Theme Detection** — Seamlessly adapts to system dark/light mode
 - **Smart Auto-Hide** — Tab bar collapses on scroll, reappears when needed
 - **60fps Performance** — Silky smooth animations with zero lag

@@ -102,6 +102,26 @@
           tabId: menuTabId,
         });
         break;
+      case "copy-title":
+        {
+          const tab = $tabsStore.find((t) => t.id === menuTabId);
+          if (tab?.title) {
+            navigator.clipboard.writeText(tab.title).catch((err) => {
+              console.error("Failed to copy title:", err);
+            });
+          }
+        }
+        break;
+      case "copy-url":
+        {
+          const tab = $tabsStore.find((t) => t.id === menuTabId);
+          if (tab?.url) {
+            navigator.clipboard.writeText(tab.url).catch((err) => {
+              console.error("Failed to copy URL:", err);
+            });
+          }
+        }
+        break;
     }
 
     menuVisible = false;
