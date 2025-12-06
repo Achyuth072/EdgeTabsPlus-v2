@@ -17,6 +17,33 @@
   $: effectiveTheme =
     $settingsStore.theme === "system" ? systemTheme : $settingsStore.theme;
 
+  // Reactively calculate tab widths based on settings
+  $: tabWidths = $tabsStore.map((tab, index) => {
+    const mode = $settingsStore.tabWidth;
+    const tabCount = $tabsStore.length;
+
+    switch (mode) {
+      case "dynamic":
+        // Based on tab count
+        if (tabCount === 1) return 180;
+        if (tabCount === 2) return 160;
+        if (tabCount === 3) return 120;
+        if (tabCount === 4) return 100;
+        return 90; // 5+ tabs
+
+      case "adaptive":
+        // Use CSS flex-based sizing
+        return "auto";
+
+      case "fixed":
+        // User-defined fixed width
+        return $settingsStore.fixedTabWidth;
+
+      default:
+        return 150; // Fallback
+    }
+  });
+
   // Auto-scroll to active tab
   $: {
     const activeTab = $tabsStore.find((t) => t.isActive);
@@ -108,11 +135,12 @@
 <div class="tab-bar-container">
   <div class="tab-bar {effectiveTheme}">
     <div class="tabs-list" bind:this={tabsListElement}>
-      {#each $tabsStore as tab (tab.id)}
+      {#each $tabsStore as tab, index (tab.id)}
         <TabItem
           {tab}
           isActive={tab.isActive}
           theme={effectiveTheme}
+          width={tabWidths[index]}
           on:contextmenu={handleContextMenu}
         />
       {/each}

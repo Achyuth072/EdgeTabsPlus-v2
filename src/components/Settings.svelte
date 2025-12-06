@@ -41,6 +41,28 @@
     await saveSettings({ tabWidth: target.value as UserSettings["tabWidth"] });
   }
 
+  async function handleFixedWidthChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    await saveSettings({ fixedTabWidth: parseInt(target.value, 10) });
+  }
+
+  async function handleTabBarPositionChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    await saveSettings({
+      tabBarPosition: target.value as UserSettings["tabBarPosition"],
+    });
+  }
+
+  async function handleDisableInPwaChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    await saveSettings({ disableInPwa: target.value === "true" });
+  }
+
+  async function handleSmartTitlesChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    await saveSettings({ smartTitles: target.value === "true" });
+  }
+
   async function handleReset() {
     if (confirm("Reset all settings to defaults?")) {
       await resetSettings();
@@ -93,10 +115,87 @@
       on:change={handleTabWidthChange}
     >
       <option value="dynamic">Dynamic</option>
+      <option value="adaptive">Adaptive</option>
       <option value="fixed">Fixed</option>
     </select>
     <p class="setting-description">
-      Choose between flexible or consistent tab widths
+      Dynamic: Based on tab count • Adaptive: Based on title length • Fixed:
+      Custom width
+    </p>
+  </div>
+
+  {#if settings.tabWidth === "fixed"}
+    <div class="setting-group slider-group">
+      <label for="fixedTabWidth">
+        <span class="label-icon">↔️</span>
+        <span class="label-text">Fixed Width: {settings.fixedTabWidth}px</span>
+      </label>
+      <input
+        type="range"
+        id="fixedTabWidth"
+        min="36"
+        max="200"
+        value={settings.fixedTabWidth}
+        on:input={handleFixedWidthChange}
+      />
+      <div class="slider-labels">
+        <span class="slider-label-left">Favicon Only (36px)</span>
+        <span class="slider-label-right">Full Width (200px)</span>
+      </div>
+    </div>
+  {/if}
+
+  <div class="setting-group">
+    <label for="tabBarPosition">
+      <span class="label-icon">📍</span>
+      <span class="label-text">Tab Bar Position</span>
+    </label>
+    <select
+      id="tabBarPosition"
+      value={settings.tabBarPosition}
+      on:change={handleTabBarPositionChange}
+    >
+      <option value="top">Top</option>
+      <option value="bottom">Bottom</option>
+    </select>
+    <p class="setting-description">
+      Choose where the tab bar appears on the page
+    </p>
+  </div>
+
+  <div class="setting-group">
+    <label for="disableInPwa">
+      <span class="label-icon">📱</span>
+      <span class="label-text">Disable in PWA Mode</span>
+    </label>
+    <select
+      id="disableInPwa"
+      value={settings.disableInPwa ? "true" : "false"}
+      on:change={handleDisableInPwaChange}
+    >
+      <option value="true">Enabled</option>
+      <option value="false">Disabled</option>
+    </select>
+    <p class="setting-description">
+      Automatically hide tab bar when running apps in standalone mode
+    </p>
+  </div>
+
+  <div class="setting-group">
+    <label for="smartTitles">
+      <span class="label-icon">✨</span>
+      <span class="label-text">Smart Tab Titles</span>
+    </label>
+    <select
+      id="smartTitles"
+      value={settings.smartTitles ? "true" : "false"}
+      on:change={handleSmartTitlesChange}
+    >
+      <option value="true">Enabled</option>
+      <option value="false">Disabled</option>
+    </select>
+    <p class="setting-description">
+      Strip site names from tab titles (e.g., "Article - Site" → "Article")
     </p>
   </div>
 
@@ -225,6 +324,66 @@
     transform: scale(0.98);
   }
 
+  /* Slider styles */
+  .slider-group {
+    margin-top: -8px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 12px 0 8px 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0078d4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 6px rgba(0, 120, 212, 0.1);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0078d4;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 6px rgba(0, 120, 212, 0.1);
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .slider-label-left,
+  .slider-label-right {
+    font-weight: 500;
+  }
+
   /* Dark mode support */
   @media (prefers-color-scheme: dark) {
     .settings {
@@ -273,6 +432,22 @@
       background: #333;
       border-color: #555;
       color: #e0e0e0;
+    }
+
+    input[type="range"] {
+      background: #444;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      background: #0078d4;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      background: #0078d4;
+    }
+
+    .slider-labels {
+      color: #888;
     }
   }
 </style>

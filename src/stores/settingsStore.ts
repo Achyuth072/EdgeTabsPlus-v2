@@ -6,7 +6,11 @@ import type { UserSettings } from '../types';
 const DEFAULT_SETTINGS: UserSettings = {
   theme: 'system',
   scrollBehavior: 'hide-on-scroll',
+  tabBarPosition: 'top',
   tabWidth: 'dynamic',
+  fixedTabWidth: 150,
+  disableInPwa: true,
+  smartTitles: true,
 };
 
 // Create the writable store

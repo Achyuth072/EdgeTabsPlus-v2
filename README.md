@@ -12,6 +12,7 @@ EdgeTabs+ brings the familiar desktop tab bar experience to Microsoft Edge on An
 
 ## Features
 
+### Core Features
 - **Instant Tab Switching** — One-tap access to all your tabs
 - **Quick New Tab** — Add tabs without navigating menus
 - **Easy Tab Management** — Close tabs with a single tap
@@ -20,6 +21,16 @@ EdgeTabs+ brings the familiar desktop tab bar experience to Microsoft Edge on An
 - **Smart Auto-Hide** — Tab bar collapses on scroll, reappears when needed
 - **60fps Performance** — Silky smooth animations with zero lag
 - **Privacy First** — All processing happens locally, no data collection
+
+### Advanced Features ✨
+- **Flexible Positioning** — Choose top or bottom placement for the tab bar
+- **Adaptive Tab Width** — Three sizing modes:
+  - **Dynamic**: Width adjusts based on tab count
+  - **Adaptive**: Tabs resize to fit content naturally
+  - **Fixed**: Custom width with favicon-only mode (36-200px)
+- **Smart Tab Titles** — Strips site names for cleaner display ("Article - Site" → "Article")
+- **PWA Detection** — Automatically hides in standalone/PWA apps to prevent overlap
+- **Window Isolation** — Keeps browser and PWA tabs separate
 
 ---
 
@@ -80,9 +91,13 @@ Access settings by clicking the extension icon in the toolbar:
 |---------|---------|-------------|
 | **Theme** | System / Light / Dark | Choose your preferred color scheme |
 | **Scroll Behavior** | Hide on Scroll / Always Show | Control tab bar visibility |
-| **Tab Width (WIP)** | Dynamic / Fixed | Tab size behavior |
+| **Tab Bar Position** | Top / Bottom | Choose where the tab bar appears |
+| **Tab Width** | Dynamic / Adaptive / Fixed | Tab sizing behavior |
+| **Fixed Width** | 36px - 200px | Custom tab width (when Fixed mode selected) |
+| **Smart Tab Titles** | Enabled / Disabled | Strip site names from tab titles |
+| **Disable in PWA** | Enabled / Disabled | Auto-hide tab bar in standalone apps |
 
-All settings are synced across browser instances and persist after restart.
+All settings update instantly and persist across browser restarts.
 
 ---
 

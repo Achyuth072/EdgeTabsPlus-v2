@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
   import { settingsStore } from "../stores/settingsStore";
 
+  export let position: "top" | "bottom" = "top";
+
   let isVisible = true;
   let lastScrollY = 0;
   let ticking = false;
@@ -41,8 +43,8 @@
       isVisible = true;
     }
 
-    // At top of page - always show
-    if (currentScrollY <= 50) {
+    // At top of page - always show (only relevant for top bar)
+    if (position === "top" && currentScrollY <= 50) {
       isVisible = true;
     }
 
@@ -70,23 +72,42 @@
   });
 </script>
 
-<div class="scroll-manager" class:hidden={!isVisible}>
+<div
+  class="scroll-manager"
+  class:hidden={!isVisible}
+  class:top={position === "top"}
+  class:bottom={position === "bottom"}
+>
   <slot />
 </div>
 
 <style>
   .scroll-manager {
     position: fixed;
-    top: 0;
     left: 0;
     right: 0;
     z-index: 2147483647;
-    transform: translateY(0);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
   }
 
-  .scroll-manager.hidden {
+  .scroll-manager.top {
+    top: 0;
+    bottom: auto;
+    transform: translateY(0);
+  }
+
+  .scroll-manager.bottom {
+    top: auto;
+    bottom: 0;
+    transform: translateY(0);
+  }
+
+  .scroll-manager.top.hidden {
     transform: translateY(-100%);
+  }
+
+  .scroll-manager.bottom.hidden {
+    transform: translateY(100%);
   }
 </style>
