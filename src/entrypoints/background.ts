@@ -264,6 +264,15 @@ export default defineBackground(() => {
           browser.storage.local.set({ settings: message.payload });
           break;
 
+        case "GET_WINDOW_ID":
+          // Return the window ID of the sender tab
+          if (sender.tab?.windowId !== undefined) {
+            sendResponse({ windowId: sender.tab.windowId });
+          } else {
+            sendResponse({ windowId: null });
+          }
+          return true; // Async response
+
         case "GET_TABS":
           // Ensure we are initialized
           if (!isInitialized) {

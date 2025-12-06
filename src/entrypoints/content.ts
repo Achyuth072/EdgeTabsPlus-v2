@@ -15,6 +15,18 @@ export default defineContentScript({
     // Load settings
     await loadSettings();
 
+    // Get current window ID for tab filtering (PWA isolation)
+    try {
+      const response = await browser.runtime.sendMessage({ type: 'GET_WINDOW_ID' }) as { windowId: number | null };
+      if (response.windowId !== null) {
+        console.log('[EdgeTabsPlus] Window ID:', response.windowId);
+        const { setCurrentWindowId } = await import('../stores/tabsStore');
+        setCurrentWindowId(response.windowId);
+      }
+    } catch (e) {
+      console.warn('[EdgeTabsPlus] Failed to get window ID:', e);
+    }
+
     // Create Shadow DOM UI
     const ui = await createShadowRootUi(ctx, {
       name: 'edgetabs-plus-ui',

@@ -49,9 +49,14 @@
     }
   }
 
-  // Clamp position to viewport bounds
+  // Smart positioning
+  $: isNearBottom = y > window.innerHeight * 0.6;
   $: clampedX = Math.min(Math.max(x, 10), window.innerWidth - 160);
-  $: clampedY = Math.min(Math.max(y, 10), window.innerHeight - 150);
+
+  // Style string calculation
+  $: style = isNearBottom
+    ? `left: ${clampedX}px; bottom: ${window.innerHeight - y}px; transform-origin: bottom left;`
+    : `left: ${clampedX}px; top: ${y}px; transform-origin: top left;`;
 </script>
 
 {#if visible}
@@ -63,11 +68,7 @@
     tabindex="0"
     aria-label="Close context menu"
   >
-    <div
-      class="context-menu"
-      style="left: {clampedX}px; top: {clampedY}px;"
-      role="menu"
-    >
+    <div class="context-menu" {style} role="menu">
       {#each menuItems as item}
         <button
           class="menu-item"
@@ -91,6 +92,7 @@
     bottom: 0;
     z-index: 2147483646;
     background: transparent;
+    pointer-events: auto;
   }
 
   .context-menu {

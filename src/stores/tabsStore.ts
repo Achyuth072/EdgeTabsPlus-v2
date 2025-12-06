@@ -13,14 +13,46 @@ export const tabsStore = writable<TabUIState[]>([]);
 export const activeTabIdStore = writable<number | null>(null);
 
 /**
+ * Store for the current window ID (to filter tabs by window)
+ */
+export const currentWindowIdStore = writable<number | null>(null);
+
+/**
  * Update the tabs store with new data from the background
+ * Filters tabs by current window ID if set
  */
 export function updateTabs(tabs: TabUIState[]) {
-  tabsStore.set(tabs);
+  const currentWindowId = getCurrentWindowId();
+  
+  // Filter tabs to only show those from the current window
+  const filteredTabs = currentWindowId !== null
+    ? tabs.filter(tab => tab.windowId === currentWindowId)
+    : tabs;
+  
+  tabsStore.set(filteredTabs);
   
   // Update active tab ID
-  const activeTab = tabs.find(tab => tab.isActive);
+  const activeTab = filteredTabs.find(tab => tab.isActive);
   activeTabIdStore.set(activeTab?.id ?? null);
+}
+
+/**
+ * Set the current window ID for filtering
+ */
+export function setCurrentWindowId(windowId: number) {
+  currentWindowIdStore.set(windowId);
+}
+
+/**
+ * Get the current window ID synchronously
+ */
+let cachedWindowId: number | null = null;
+currentWindowIdStore.subscribe(id => {
+  cachedWindowId = id;
+});
+
+function getCurrentWindowId(): number | null {
+  return cachedWindowId;
 }
 
 /**

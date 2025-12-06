@@ -34,7 +34,11 @@ export interface TabUIState {
 export interface UserSettings {
   theme: 'system' | 'light' | 'dark';
   scrollBehavior: 'always-show' | 'hide-on-scroll';
-  tabWidth: 'dynamic' | 'fixed';
+  tabBarPosition: 'top' | 'bottom';
+  tabWidth: 'dynamic' | 'adaptive' | 'fixed';
+  fixedTabWidth: number;
+  disableInPwa: boolean;
+  smartTitles: boolean;
 }
 
 export interface AppState {
@@ -51,4 +55,5 @@ export type Message =
   | { type: 'TAB_NEW' }
   | { type: 'TAB_DUPLICATE'; tabId: number }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<UserSettings> }
-  | { type: 'GET_TABS' };
+  | { type: 'GET_TABS' }
+  | { type: 'GET_WINDOW_ID' };
